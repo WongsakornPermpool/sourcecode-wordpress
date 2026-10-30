@@ -1,0 +1,8 @@
+*.json
+*.bak
+*.pre_rate_fix
+__pycache__/
+.dashboard_htpasswd
+wp-config.php
+*.pem
+*.key

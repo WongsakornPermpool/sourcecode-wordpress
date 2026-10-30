@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Nginx Log Report Update Every 5 Minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=log-report.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Update Nginx Log Security Report
+After=network.target
+
+[Service]
+Type=oneshot
+User=doramonlnwza
+SupplementaryGroups=adm
+WorkingDirectory=/home/doramonlnwza/log-dashboard
+ExecStart=/bin/bash /home/doramonlnwza/log-dashboard/update_report.sh

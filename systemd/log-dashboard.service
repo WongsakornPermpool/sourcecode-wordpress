@@ -1,0 +1,14 @@
+[Unit]
+Description=Log Dashboard Web Server
+After=network.target
+
+[Service]
+Type=simple
+User=doramonlnwza
+WorkingDirectory=/home/doramonlnwza/log-dashboard
+ExecStart=/usr/bin/python3 -m http.server 8765 --bind 127.0.0.1
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

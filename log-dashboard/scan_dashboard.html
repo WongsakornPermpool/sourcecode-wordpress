@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log Security Dashboard</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f3f5f8;color:#222;margin:0;padding:24px}
+h1{margin-bottom:6px}
+.note{color:#666;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:24px 0}
+.card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px #0001}
+.value{font-size:30px;font-weight:bold;margin-top:8px}
+section{background:white;padding:20px;border-radius:12px;margin-top:16px;overflow:auto}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:10px;border-bottom:1px solid #eee}
+button{padding:10px 16px;cursor:pointer;border:0;border-radius:8px;background:#243b53;color:white}
+</style>
+</head>
+<body>
+<h1>Log Security Dashboard</h1>
+<div class="note">Nginx Log Scan Report · Rule-based detection</div>
+<p><button onclick="loadReport()">Refresh Report</button></p>
+
+<div class="cards">
+  <div class="card">Requests<div class="value" id="requests">—</div></div>
+  <div class="card">Unique IPs<div class="value" id="ips">—</div></div>
+  <div class="card">HTTP Errors<div class="value" id="errors">—</div></div>
+  <div class="card">Flagged Events<div class="value" id="events">—</div></div>
+</div>
+
+<section>
+<h2>Top IPs by Request Count</h2>
+<table><thead><tr><th>IP</th><th>Requests</th></tr></thead>
+<tbody id="topIps"></tbody></table>
+</section>
+
+<section>
+<h2>Flagged Events</h2>
+<table><thead><tr><th>Time</th><th>IP</th><th>Risk</th><th>Reason</th><th>Path</th></tr></thead>
+<tbody id="eventRows"></tbody></table>
+<p id="empty"></p>
+</section>
+
+<p class="note" id="generated"></p>
+<p class="note">Rule-based findings require human review. This page is not proof that an attack succeeded or that the system is completely safe.</p>
+
+<script>
+async function loadReport(){
+  try {
+    const response = await fetch('./ai_scan_report.json?t=' + Date.now());
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const r = await response.json();
+    document.getElementById('requests').textContent = r.parsed_requests;
+    document.getElementById('ips').textContent = r.unique_ips;
+    document.getElementById('errors').textContent = r.http_error_requests;
+    document.getElementById('events').textContent = r.suspicious_event_count;
+
+    const top = document.getElementById('topIps');
+    top.replaceChildren();
+    (r.top_ips_by_request_count || []).forEach(item => {
+      const tr = document.createElement('tr');
+      [item.ip, item.requests].forEach(value => {
+        const td = document.createElement('td');
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+      top.appendChild(tr);
+    });
+
+    const rows = document.getElementById('eventRows');
+    rows.replaceChildren();
+    (r.events || []).forEach(event => {
+      const tr = document.createElement('tr');
+      [event.time || '-', event.ip || '-', event.risk || '-',
+       (event.reasons || []).join(', '), event.path || '-'].forEach(value => {
+        const td = document.createElement('td');
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+      rows.appendChild(tr);
+    });
+    document.getElementById('empty').textContent =
+      r.events && r.events.length ? '' : 'ไม่พบเหตุการณ์ที่ตรงกับกฎตรวจจับในรายงานนี้';
+    document.getElementById('generated').textContent =
+      'Report generated at: ' + r.generated_at;
+  } catch (error) {
+    alert('อ่านรายงานไม่ได้ กรุณาตรวจสอบว่าได้สร้าง ai_scan_report.json แล้ว');
+    console.error(error);
+  }
+}
+loadReport();
+</script>
+</body>
+</html>
